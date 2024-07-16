@@ -1,6 +1,6 @@
 # telegram-summarize-bot
 
-This is a fork of https://github.com/fernvenue/summarize-telegram-bot/tree/ca022f113dd761bb269d63c1559d20cf38d89b69 that summarize link from telegram message using large language models. 
+This is a fork of [fernvenue/summarize-telegram-bot](https://github.com/fernvenue/summarize-telegram-bot/tree/ca022f113dd761bb269d63c1559d20cf38d89b69) that summarize link from telegram message using large language models. 
 
 The changes includes:
 
