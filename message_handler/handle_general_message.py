@@ -60,12 +60,12 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     'discussion': discussion
   })
   if(len(prompt) > MAX_INPUT_LENGTH):
-    await update.message.reply_text('_Processing..._ (content is truncated)', parse_mode='Markdown')
+    await update.message.edit_text('_Processing..._ (content is truncated)', parse_mode='Markdown')
     logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
     prompt = prompt[:MAX_INPUT_LENGTH]
     prompt += 'TRUNCATED'
   if prompt.endswith('TRUNCATED'):
-    await update.message.reply_text('_Processing..._ (prompt is truncated)', parse_mode='Markdown')
+    await update.message.edit_text('_Processing..._ (prompt is truncated)', parse_mode='Markdown')
   # logging.info(f'Messages: {prompt}')
   await update.message.reply_chat_action(constants.ChatAction.TYPING)
   result = []
