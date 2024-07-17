@@ -21,6 +21,7 @@ The changes includes:
 - [ ] pdf to text
 - [ ] image to text
 - [ ] summarize long messages
+- [ ] YouTube, Bilibili, podcasts to text
 
 ## Deployment
 
