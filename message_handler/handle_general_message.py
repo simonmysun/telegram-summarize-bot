@@ -67,7 +67,6 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   if prompt.endswith('TRUNCATED'):
     await update.message.edit_text('_Processing..._ (prompt is truncated)', parse_mode='Markdown')
   # logging.info(f'Messages: {prompt}')
-  await update.message.reply_chat_action(constants.ChatAction.TYPING)
   result = []
   counter = 0
   try:
