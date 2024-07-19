@@ -29,9 +29,16 @@ async def complete(prompt: str) -> None:
         if parts[1] == '[DONE]':
           continue
         data = json.loads(parts[1])
-        if data['choices'][0]['finish_reason'] != 'stop':
-          if data['choices'][0]['finish_reason'] == None:
-            if 'content' in data['choices'][0]['delta']:
-              yield data['choices'][0]['delta']['content']
-          else:
-            raise Exception(f'finish_reason={ data["choices"][0]["finish_reason"] }')
+        if 'choices' not in data:
+          logging.error(f'Unexpected response: {data}')
+          raise
+        if len(data['choices']) != 1:
+          logging.error(f'Unexpected number of choices: {len(data["choices"])}, {data}')
+          raise
+        else:
+          if data['choices'][0]['finish_reason'] != 'stop':
+            if data['choices'][0]['finish_reason'] == None:
+              if 'content' in data['choices'][0]['delta']:
+                yield data['choices'][0]['delta']['content']
+            else:
+              raise Exception(f'finish_reason={ data["choices"][0]["finish_reason"] }')

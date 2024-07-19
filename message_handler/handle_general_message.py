@@ -31,9 +31,13 @@ def get_url_from_message(messages: 'telegram.Message[]') -> str:
     logging.info(f'No URL found.')
   return url
 
-prompt_template = ''
-with open('prompt_template.txt', 'r') as f_prompt_template:
-  prompt_template = f_prompt_template.read()
+prompt_template_summarize_content = ''
+with open('prompt_template_summarize_content.txt', 'r') as f_prompt_template_summarize_content:
+  prompt_template_summarize_content = f_prompt_template_summarize_content.read()
+
+prompt_template_summarize_discussion = ''
+with open('prompt_template_summarize_discussion.txt', 'r') as f_prompt_template_summarize_discussion:
+  prompt_template_summarize_discussion = f_prompt_template_summarize_discussion.read()
 
 async def handle_general_message(update: 'telegram.Update', context: 'telegram.ext.CallbackContext') -> None:
   replyMessage = await update.message.reply_text('_Processing..._', parse_mode='Markdown')
@@ -44,28 +48,18 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   logging.info(f'Processing: {url}')
   uri, discussion_uri = process_url(url)
   content = await fetch_content(uri.geturl())
-  discussion = ''
-  if discussion_uri:
-    discussion = await fetch_content(discussion_uri.geturl())
-  if len([line for line in (content + discussion).split('\n') if line.strip()]) == 0:
+  if len([line for line in content.split('\n') if line.strip()]) == 0:
     logging.error(f'No content or discussion is fetched. Task aborted.')
     await replyMessage.edit_text('*ERROR*: No content or discussion is fetched. Task aborted.', parse_mode='Markdown')
     return
-  if discussion_uri and len(content) > MAX_INPUT_LENGTH * 0.75:
-    logging.info(f'Content length is {len(content)}. Truncating to {int(MAX_INPUT_LENGTH * 0.75)} characters.')
-    content = content[:int(MAX_INPUT_LENGTH * 0.75)]
-    content += 'TRUNCATED'
-  prompt = prompt_template.format(**{
-    'content': content,
-    'discussion': discussion
+  prompt = prompt_template_summarize_content.format(**{
+    'content': content
   })
   if(len(prompt) > MAX_INPUT_LENGTH):
-    await update.message.edit_text('_Processing..._ (content is truncated)', parse_mode='Markdown')
+    await replyMessage.edit_text('_Processing..._ (content is truncated)', parse_mode='Markdown')
     logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
     prompt = prompt[:MAX_INPUT_LENGTH]
     prompt += 'TRUNCATED'
-  if prompt.endswith('TRUNCATED'):
-    await update.message.edit_text('_Processing..._ (prompt is truncated)', parse_mode='Markdown')
   # logging.info(f'Messages: {prompt}')
   result = []
   counter = 0
@@ -82,9 +76,49 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
           pass
   except Exception as e:
     logging.error(f'ERROR: {repr(e)}')
-    await replyMessage.edit_text(f'*ERROR*: LLM API request failed: {repr(e)}', parse_mode='Markdown')
+    await replyMessage.edit_text(f'{''.join(result)}\n*ERROR*: LLM API request failed: {repr(e)}', parse_mode='Markdown')
   if len(result) == 0:
     logging.error('No result returned.')
     await replyMessage.edit_text('*ERROR*: No result returned.', parse_mode='Markdown')
   if counter > 0:
     await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
+  
+  discussion = ''
+  if discussion_uri:
+    replyMessage = await update.message.reply_text('_Processing discussion_... ', parse_mode='Markdown')
+    discussion = await fetch_content(discussion_uri.geturl())
+    if len([line for line in discussion.split('\n') if line.strip()]) == 0:
+      logging.error(f'No discussion is fetched. Task aborted.')
+      await replyMessage.edit_text('*ERROR*: No discussion is fetched. Task aborted.', parse_mode='Markdown')
+      return
+    prompt = prompt_template_summarize_discussion.format(**{
+      'content': ''.join(result),
+      'discussion': discussion
+    })
+    if(len(prompt) > MAX_INPUT_LENGTH):
+      await update.message.edit_text('_Processing..._ (discussion is truncated)', parse_mode='Markdown')
+      logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
+      prompt = prompt[:MAX_INPUT_LENGTH]
+      prompt += 'TRUNCATED'
+    # logging.info(f'Messages: {prompt}')
+    result = []
+    counter = 0
+    try:
+      async for token in complete(prompt):
+        counter += 1
+        result.append(token)
+        if(counter >= 50):
+          counter = 0
+          try:
+            await update.message.reply_chat_action(constants.ChatAction.TYPING)
+            await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
+          except:
+            pass
+    except Exception as e:
+      logging.error(f'ERROR: {repr(e)}')
+      await replyMessage.edit_text(f'*ERROR*: LLM API request failed: {repr(e)}', parse_mode='Markdown')
+    if len(result) == 0:
+      logging.error('No result returned.')
+      await replyMessage.edit_text('*ERROR*: No result returned.', parse_mode='Markdown')
+    if counter > 0:
+      await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
