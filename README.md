@@ -49,7 +49,7 @@ The changes includes:
 
   ```bash
   docker build -t telegram-summarize-bot https://github.com/simonmysun/telegram-summarize-bot.git
-  docker run -d -v /path/to/.env:/app/.env:r -v /path/to/prompt_template.txt:/app/prompt_template.txt:r  --name telegram-summarize-bot telegram-summarize-bot
+  docker run -d -v /path/to/.env:/app/.env:r -v /path/to/prompt_template.txt:/app/prompt_template.txt:r  --name telegram-summarize-bot --init telegram-summarize-bot
   ```
 
 ### Without Docker
