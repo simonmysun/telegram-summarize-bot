@@ -2,7 +2,7 @@ import typing
 if typing.TYPE_CHECKING:
     import telegram
     
-import logging, re, os
+import logging, re, os, time
 
 from telegram import constants
 
@@ -55,20 +55,19 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   prompt = prompt_template_summarize_content.format(**{
     'content': content
   })
-  if(len(prompt) > MAX_INPUT_LENGTH):
+  if len(prompt) > MAX_INPUT_LENGTH:
     await replyMessage.edit_text('_Processing..._ (content is truncated)', parse_mode='Markdown')
     logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
     prompt = prompt[:MAX_INPUT_LENGTH]
     prompt += 'TRUNCATED'
   # logging.info(f'Messages: {prompt}')
   result = []
-  counter = 0
+  last_sent = time.time()
   try:
     async for token in complete(prompt):
-      counter += 1
       result.append(token)
-      if(counter >= 50):
-        counter = 0
+      if last_sent + 0.5 < time.time():
+        last_sent = time.time()
         try:
           await update.message.reply_chat_action(constants.ChatAction.TYPING)
           await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
@@ -81,8 +80,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   if len(result) == 0:
     logging.error('No result returned.')
     await replyMessage.edit_text('*ERROR*: No result returned.', parse_mode='Markdown')
-  if counter > 0:
-    await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
+  await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
   
   discussion = ''
   if discussion_uri:
@@ -96,20 +94,19 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
       'content': ''.join(result),
       'discussion': discussion
     })
-    if(len(prompt) > MAX_INPUT_LENGTH):
+    if len(prompt) > MAX_INPUT_LENGTH:
       await update.message.edit_text('_Processing..._ (discussion is truncated)', parse_mode='Markdown')
       logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
       prompt = prompt[:MAX_INPUT_LENGTH]
       prompt += 'TRUNCATED'
     # logging.info(f'Messages: {prompt}')
     result = []
-    counter = 0
+    last_sent = time.time()
     try:
       async for token in complete(prompt):
-        counter += 1
         result.append(token)
-        if(counter >= 50):
-          counter = 0
+        if last_sent + 0.5 < time.time():
+          last_sent = time.time()
           try:
             await update.message.reply_chat_action(constants.ChatAction.TYPING)
             await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
@@ -122,5 +119,5 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     if len(result) == 0:
       logging.error('No result returned.')
       await replyMessage.edit_text('*ERROR*: No result returned.', parse_mode='Markdown')
-    if counter > 0:
+    else:
       await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
