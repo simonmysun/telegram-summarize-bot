@@ -66,7 +66,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   try:
     async for token in complete(prompt):
       result.append(token)
-      if last_sent + 0.5 < time.time():
+      if last_sent + 0.100 < time.time():
         last_sent = time.time()
         try:
           await update.message.reply_chat_action(constants.ChatAction.TYPING)
@@ -110,7 +110,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     try:
       async for token in complete(prompt):
         result.append(token)
-        if last_sent + 0.5 < time.time():
+        if last_sent + 0.100 < time.time():
           last_sent = time.time()
           try:
             await update.message.reply_chat_action(constants.ChatAction.TYPING)
