@@ -77,6 +77,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   except Exception as e:
     logging.error(f'ERROR: {repr(e)}')
     await replyMessage.edit_text(f'{''.join(result)}\n*ERROR*: LLM API request failed: {repr(e)}', parse_mode='Markdown')
+    return
   if len(result) == 0:
     logging.error('No result returned.')
     await replyMessage.edit_text('*ERROR*: No result returned.', parse_mode='Markdown')
@@ -116,7 +117,8 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
             pass
     except Exception as e:
       logging.error(f'ERROR: {repr(e)}')
-      await replyMessage.edit_text(f'*ERROR*: LLM API request failed: {repr(e)}', parse_mode='Markdown')
+      await replyMessage.edit_text(f'{''.join(result)}\n*ERROR*: LLM API request failed: {repr(e)}', parse_mode='Markdown')
+      return
     if len(result) == 0:
       logging.error('No result returned.')
       await replyMessage.edit_text('*ERROR*: No result returned.', parse_mode='Markdown')

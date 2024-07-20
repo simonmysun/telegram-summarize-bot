@@ -34,7 +34,6 @@ async def complete(prompt: str) -> None:
           raise
         if len(data['choices']) != 1:
           logging.error(f'Unexpected number of choices: {len(data["choices"])}, {data}')
-          raise
         else:
           if data['choices'][0]['finish_reason'] != 'stop':
             if data['choices'][0]['finish_reason'] == None:
