@@ -95,8 +95,8 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
       'discussion': discussion
     })
     if len(prompt) > MAX_INPUT_LENGTH:
-      await update.message.edit_text('_Processing..._ (discussion is truncated)', parse_mode='Markdown')
       logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
+      await replyMessage.edit_text('_Processing..._ (discussion is truncated)', parse_mode='Markdown')
       prompt = prompt[:MAX_INPUT_LENGTH]
       prompt += 'TRUNCATED'
     # logging.info(f'Messages: {prompt}')
