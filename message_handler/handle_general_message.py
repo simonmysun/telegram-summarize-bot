@@ -43,6 +43,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   replyMessage = await update.message.reply_text('_Processing..._', parse_mode='Markdown')
   url = get_url_from_message([update.message.reply_to_message, update.message])
   if url == '':
+    time.sleep(0.100)
     await replyMessage.edit_text('*ERROR*: No URL found in the message.', parse_mode='Markdown')
     return
   logging.info(f'Processing: {url}')
@@ -50,12 +51,14 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   content = await fetch_content(uri.geturl())
   if len([line for line in content.split('\n') if line.strip()]) == 0:
     logging.error(f'No content or discussion is fetched. Task aborted.')
+    time.sleep(0.100)
     await replyMessage.edit_text('*ERROR*: No content or discussion is fetched. Task aborted.', parse_mode='Markdown')
     return
   prompt = prompt_template_summarize_content.format(**{
     'content': content
   })
   if len(prompt) > MAX_INPUT_LENGTH:
+    time.sleep(0.100)
     await replyMessage.edit_text('_Processing..._ (content is truncated)', parse_mode='Markdown')
     logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
     prompt = prompt[:MAX_INPUT_LENGTH]
@@ -75,24 +78,25 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
           pass
   except Exception as e:
     logging.error(f'ERROR: {repr(e)}')
+    time.sleep(0.100)
     await replyMessage.edit_text(f'{''.join(result)}\n*ERROR*: LLM API request failed: {repr(e)}', parse_mode='Markdown')
     return
   time.sleep(0.100)
   if len(result) == 0:
     logging.error('No result returned.')
-    time.sleep(0.100)
     await replyMessage.edit_text('*ERROR*: No result returned.', parse_mode='Markdown')
   else:
     await replyMessage.edit_text(''.join(result), parse_mode='Markdown')
   
-  time.sleep(0.100)
   
   discussion = ''
   if discussion_uri:
+    time.sleep(0.100)
     replyMessage = await update.message.reply_text('_Processing discussion_... ', parse_mode='Markdown')
     discussion = await fetch_content(discussion_uri.geturl())
     if len([line for line in discussion.split('\n') if line.strip()]) == 0:
       logging.error(f'No discussion is fetched. Task aborted.')
+      time.sleep(0.100)
       await replyMessage.edit_text('*ERROR*: No discussion is fetched. Task aborted.', parse_mode='Markdown')
       return
     prompt = prompt_template_summarize_discussion.format(**{
