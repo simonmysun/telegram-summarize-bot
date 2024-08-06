@@ -33,4 +33,5 @@ async def fetch_content(url: str) -> str:
   except Exception as e:
     logging.info(f'Error: {repr(e)}')
     pass
+  logging.info(f'Content length: {len(content)}')
   return content
