@@ -25,9 +25,9 @@ def get_url_from_message(messages: 'telegram.Message[]') -> str:
           all_text += f'{entity.url}\n'
           logging.info(f'URL found in entity: {entity.url}')
     all_text += f'{message.text}\n'
-  urls = re.findall(r'(https?://[^\s]+)', all_text)
+  urls = re.findall(r'([Hh][Tt]{2}[Pp][Ss]?:\/\/([Ww]{3}\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*))', all_text)
   if urls:
-    url = urls[0]
+    url = urls[0][0]
   else:
     logging.info(f'No URL found.')
   return url
