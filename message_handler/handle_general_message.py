@@ -23,6 +23,13 @@ def get_url_from_message(messages: 'telegram.Message[]') -> str:
         if entity.type == 'text_link':
           all_text += f'{entity.url}\n'
           logging.info(f'URL found in entity: {entity.url}')
+    if message.caption_entities:
+      for entity in message.caption_entities:
+        if entity.type == 'text_link':
+          all_text += f'{entity.url}\n'
+          logging.info(f'URL found in caption entity: {entity.url}')
+    if message.caption:
+      all_text += f'{message.caption}\n'
     all_text += f'{message.text}\n'
   logging.info(f'All text: {all_text}')
   urls = re.findall(r'(([Hh][Tt]{2}[Pp][Ss]?:\/\/)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*))', all_text)
