@@ -22,7 +22,9 @@ def get_reddit_post_url_from_rss(subreddit: str, post_id: str) -> str: # never t
     return ''
 
 def process_url(url: str) -> tuple[urlparse, urlparse]:
-  uri = urlparse(url, 'http')
+  uri = urlparse(url)
+  if not uri.scheme:
+    uri = urlparse(f'http://{url}')
   discussion_uri = None
   if uri.netloc == 'news.ycombinator.com':
     story_id = url.split('=')[-1]
