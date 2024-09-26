@@ -58,13 +58,13 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     return
   logging.info(f'Processing: {url}')
   uri, discussion_uri = process_url(url)
-  content = await fetch_content(uri.geturl())
+  (final_url, content) = await fetch_content(uri.geturl())
   if len([line for line in content.split('\n') if line.strip()]) == 0:
     logging.error(f'No content or discussion is fetched. Task aborted.')
     time.sleep(message_interval)
     message_interval += 0.250
     await replyMessage.edit_text('*ERROR*: No content or discussion is fetched. Task aborted.', parse_mode='Markdown')
-    content = 'Error fetching content, please output this URL and summarize the words appearing in the URL.'
+    content = f'Error fetching content, please output this URL and summarize the words appearing in the URL instead: {final_url}.'
   prompt = prompt_template_summarize_content.format(**{
     'content': content
   })
@@ -110,7 +110,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     time.sleep(message_interval)
     message_interval += 0.250
     replyMessage = await update.message.reply_text('_Processing discussion_... ', parse_mode='Markdown')
-    discussion = await fetch_content(discussion_uri.geturl())
+    (final_url, discussion) = await fetch_content(discussion_uri.geturl())
     if len([line for line in discussion.split('\n') if line.strip()]) == 0:
       logging.error(f'No discussion is fetched. Task aborted.')
       time.sleep(message_interval)

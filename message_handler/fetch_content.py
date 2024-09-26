@@ -7,7 +7,7 @@ h2t.ignore_links = True
 h2t.ignore_images = True
 h2t.google_doc = True
 
-async def fetch_content(url: str) -> str:
+async def fetch_content(url: str) -> (str, str):
   logging.info(f'Fetching content from {url}')
   content = ''
   try:
@@ -17,6 +17,7 @@ async def fetch_content(url: str) -> str:
     if response.status_code == 200:
       if response.history:
         logging.info(f'Redirected to {response.url}')
+        url = response.url
       logging.info(f'Fetched {len(response.text)}')
       content = response.text
     else:
@@ -34,4 +35,4 @@ async def fetch_content(url: str) -> str:
     logging.info(f'Error: {repr(e)}')
     pass
   logging.info(f'Content length: {len(content)}')
-  return content
+  return (url, content)
