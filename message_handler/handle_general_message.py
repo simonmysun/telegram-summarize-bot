@@ -64,7 +64,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     time.sleep(message_interval)
     message_interval += 0.250
     await replyMessage.edit_text('*ERROR*: No content or discussion is fetched. Task aborted.', parse_mode='Markdown')
-    return
+    content = 'Error fetching content, please output this URL and summarize the words appearing in the URL.'
   prompt = prompt_template_summarize_content.format(**{
     'content': content
   })
