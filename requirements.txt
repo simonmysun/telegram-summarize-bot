@@ -1,5 +1,7 @@
+bleach==6.1.0
 feedparser==6.0.11
 html2text==2024.2.26
+Markdown==3.7
 python-dotenv==1.0.1
 python-telegram-bot==21.6
 Requests==2.32.3
