@@ -1,4 +1,9 @@
-import os, logging, requests, json
+import logging
+logger = logging.getLogger(__name__)
+
+import os
+import requests
+import json
 
 API_KEY = os.getenv('OPENAI_API_KEY')
 API_URL = os.getenv('OPENAI_API_URL') if os.getenv('OPENAI_API_URL') else 'https://api.openai.com/v1/'
@@ -30,14 +35,19 @@ async def complete(prompt: str) -> None:
           continue
         data = json.loads(parts[1])
         if 'choices' not in data:
-          logging.error(f'Unexpected response: {data}')
+          logger.error(f'Unexpected response: {data}')
           raise
         if len(data['choices']) != 1:
-          logging.error(f'Unexpected number of choices: {len(data["choices"])}, {data}')
+          logger.error(f'Unexpected number of choices: {len(data["choices"])}, {data}')
         else:
-          if data['choices'][0]['finish_reason'] != 'stop':
-            if data['choices'][0]['finish_reason'] == None:
-              if 'content' in data['choices'][0]['delta']:
-                yield data['choices'][0]['delta']['content']
-            else:
-              raise Exception(f'finish_reason={ data["choices"][0]["finish_reason"] }')
+          try:
+            if data['choices'][0]['finish_reason'] != 'stop':
+              if data['choices'][0]['finish_reason'] == None:
+                if 'content' in data['choices'][0]['delta']:
+                  yield data['choices'][0]['delta']['content']
+              else:
+                raise Exception(f'finish_reason={ data["choices"][0]["finish_reason"] }')
+          except Exception as e:
+            logger.error(line)
+            logger.error(f'Error: {e}')
+            raise

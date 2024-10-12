@@ -1,4 +1,7 @@
-import os, logging
+import logging
+logger = logging.getLogger(__name__)
+
+import os
 
 import typing
 if typing.TYPE_CHECKING:
@@ -11,10 +14,10 @@ ALLOWED_TELEGRAM_USER_IDS = list(map(int, os.getenv('ALLOWED_TELEGRAM_USER_IDS')
 
 async def handle_permission_check(update: 'telegram.Update', context: 'telegram.ext.CallbackContext') -> None:
   user_id = update.message.from_user.id
-  logging.info(f'user<{user_id}>: {update.message.text}')
+  logger.info(f'user<{user_id}>: {update.message.text}')
   if user_id not in ADMIN_USER_IDS and user_id not in ALLOWED_TELEGRAM_USER_IDS:
-    logging.info(f'user<{user_id}>: Permission denied')
+    logger.info(f'user<{user_id}>: Permission denied')
     await update.message.reply_text('Permission denied')
     raise ApplicationHandlerStop()
   else:
-    logging.info(f'user<{user_id}>: Permission granted')
+    logger.info(f'user<{user_id}>: Permission granted')

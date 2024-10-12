@@ -1,4 +1,7 @@
-import logging, requests
+import logging
+logger = logging.getLogger(__name__)
+
+import requests
 
 from html2text import HTML2Text
 h2t = HTML2Text()
@@ -8,7 +11,7 @@ h2t.ignore_images = True
 h2t.google_doc = True
 
 async def fetch_content(url: str) -> (str, str):
-  logging.info(f'Fetching content from {url}')
+  logger.info(f'Fetching content from {url}')
   content = ''
   try:
     response = requests.get(url, allow_redirects=True, headers={
@@ -16,12 +19,12 @@ async def fetch_content(url: str) -> (str, str):
   })
     if response.status_code == 200:
       if response.history:
-        logging.info(f'Redirected to {response.url}')
+        logger.info(f'Redirected to {response.url}')
         url = response.url
-      logging.info(f'Fetched {len(response.text)}')
+      logger.info(f'Fetched {len(response.text)}')
       content = response.text
     else:
-      logging.info(f'Failed to retrieve content from {url}. Error: {response.status_code}')
+      logger.info(f'Failed to retrieve content from {url}. Error: {response.status_code}')
     try:
       content_text = h2t.handle(content)
       if len([line for line in content_text.split('\n') if line.strip()]) > 0:
@@ -29,10 +32,10 @@ async def fetch_content(url: str) -> (str, str):
       else:
         raise Exception('Converted text has no content.')
     except:
-      logging.debug(f'Failed to convert HTML to text.')
+      logger.debug(f'Failed to convert HTML to text.')
       pass
   except Exception as e:
-    logging.info(f'Error: {repr(e)}')
+    logger.info(f'Error: {repr(e)}')
     pass
-  logging.info(f'Content length: {len(content)}')
+  logger.info(f'Content length: {len(content)}')
   return (url, content)

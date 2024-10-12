@@ -1,4 +1,7 @@
-import time, logging
+import logging
+logger = logging.getLogger(__name__)
+
+import time
 
 class Throttle:
   # https://core.telegram.org/bots/faq#my-bot-is-hitting-limits-how-do-i-avoid-this
@@ -11,25 +14,25 @@ class Throttle:
   def __init__(self):
     self.queue = list()
   
-  def update(self):
-    now = time.time()
-    self.queue = [timestamp for timestamp in self.queue if timestamp > now - 60]
-  
   def call(self):
-    self.wait()
+    self.__wait()
     self.queue.append(time.time())
     
   def busy(self):
     return len(self.queue) >= 19 or len(self.queue) > 0 and time.time() - self.queue[-1] < 1
   
-  def wait(self):
-    self.update()
+  def __update(self):
+    now = time.time()
+    self.queue = [timestamp for timestamp in self.queue if timestamp > now - 60]
+  
+  def __wait(self):
+    self.__update()
     now = time.time()
     if len(self.queue) >= 19:
-      logging.info(f'lenth of queue = {len(self.queue)}, waiting {(now - self.queue[0])} seconds to dequeue. Throttling...')
+      logger.info(f'lenth of queue = {len(self.queue)}, waiting {(now - self.queue[0])} seconds to dequeue. Throttling...')
       time.sleep(60.5 - (now - self.queue[0]))
-      self.wait()
+      self.__wait()
     elif len(self.queue) > 0 and now - self.queue[-1] < 1:
-      logging.info(f'last sent {(now - self.queue[-1])} second ago. Throttling...')
+      logger.info(f'last sent {(now - self.queue[-1])} second ago. Throttling...')
       time.sleep(1.5 - (now - self.queue[-1]))
-      self.wait()
+      self.__wait()

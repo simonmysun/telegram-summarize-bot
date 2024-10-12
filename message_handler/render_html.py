@@ -2,6 +2,7 @@ import re
 import markdown
 import bleach
 import logging
+logger = logging.getLogger(__name__)
 
 # https://core.telegram.org/bots/api#html-style
 markdown_text='''

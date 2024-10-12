@@ -1,8 +1,13 @@
+import logging
+logger = logging.getLogger(__name__)
+
 import typing
 if typing.TYPE_CHECKING:
     import telegram
     
-import logging, re, os
+import re
+import os
+
 from telegram import constants
 
 from .process_url import process_url
@@ -23,21 +28,21 @@ def get_url_from_message(messages: 'telegram.Message[]') -> str:
       for entity in message.entities:
         if entity.type == 'text_link':
           all_text += f'{entity.url}\n'
-          logging.info(f'URL found in entity: {entity.url}')
+          logger.info(f'URL found in entity: {entity.url}')
     if message.caption_entities:
       for entity in message.caption_entities:
         if entity.type == 'text_link':
           all_text += f'{entity.url}\n'
-          logging.info(f'URL found in caption entity: {entity.url}')
+          logger.info(f'URL found in caption entity: {entity.url}')
     if message.caption:
       all_text += f'{message.caption}\n'
     all_text += f'{message.text}\n'
-  logging.info(f'All text: {all_text}')
+  logger.info(f'All text: {all_text}')
   urls = re.findall(r'(([Hh][Tt]{2}[Pp][Ss]?:\/\/)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.([a-zA-Z()]{2,}|[xX][nN]--[a-zA-Z()]{2,})\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*))', all_text) # this is still not a complete URL matching regex
   if urls:
     url = urls[0][0]
   else:
-    logging.info(f'No URL found.')
+    logger.info(f'No URL found.')
   return url
 
 throttle = Throttle()
@@ -58,11 +63,11 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     throttle.call()
     await replyMessage.edit_text(render('**ERROR**: No URL found in the message.'), parse_mode=constants.ParseMode.HTML)
     return
-  logging.info(f'Processing: {url}')
+  logger.info(f'Processing: {url}')
   uri, discussion_uri = process_url(url)
   (final_url, content) = await fetch_content(uri.geturl())
   if len([line for line in content.split('\n') if line.strip()]) == 0:
-    logging.error(f'No content or discussion is fetched. Task aborted.')
+    logger.error(f'No content or discussion is fetched. Task aborted.')
     throttle.call()
     await replyMessage.edit_text(render('**ERROR**: No content or discussion is fetched. Task aborted.'), parse_mode=constants.ParseMode.HTML)
     content = f'{final_url}.'
@@ -72,10 +77,10 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   if len(prompt) > MAX_INPUT_LENGTH:
     throttle.call()
     await update.message.reply_text(render('_content is truncated_'), parse_mode=constants.ParseMode.HTML)
-    logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
+    logger.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
     prompt = prompt[:MAX_INPUT_LENGTH]
     prompt += 'TRUNCATED'
-  # logging.info(f'Messages: {prompt}')
+  # logger.info(f'Messages: {prompt}')
   result = []
   try:
     async for token in complete(prompt):
@@ -90,13 +95,13 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
         except:
           pass
   except Exception as e:
-    logging.error(f'ERROR: {repr(e)}')
+    logger.error(f'ERROR: {repr(e)}')
     throttle.call()
     await replyMessage.edit_text(render(f'{''.join(result)}\n**ERROR**: LLM API request failed: {repr(e)}'), parse_mode=constants.ParseMode.HTML)
     return
   throttle.call()
   if len(result) == 0:
-    logging.error('No result returned.')
+    logger.error('No result returned.')
     await replyMessage.edit_text(render('**ERROR**: No result returned.'), parse_mode=constants.ParseMode.HTML)
   else:
     await replyMessage.edit_text('<blockquote expandable>' + render(''.join(result)) + '</blockquote>', parse_mode=constants.ParseMode.HTML)
@@ -107,7 +112,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     replyMessage = await update.message.reply_text(render('_Processing discussion..._'), parse_mode=constants.ParseMode.HTML)
     (final_url, discussion) = await fetch_content(discussion_uri.geturl())
     if len([line for line in discussion.split('\n') if line.strip()]) == 0:
-      logging.error(f'No discussion is fetched. Task aborted.')
+      logger.error(f'No discussion is fetched. Task aborted.')
       throttle.call()
       await replyMessage.edit_text(render('**ERROR**: No discussion is fetched. Task aborted.'), parse_mode=constants.ParseMode.HTML)
       return
@@ -116,12 +121,12 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
       'discussion': discussion
     })
     if len(prompt) > MAX_INPUT_LENGTH:
-      logging.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
+      logger.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
       throttle.call()
       await update.message.reply_text(render('_discussion is truncated_'), parse_mode=constants.ParseMode.HTML)
       prompt = prompt[:MAX_INPUT_LENGTH]
       prompt += 'TRUNCATED'
-    # logging.info(f'Messages: {prompt}')
+    # logger.info(f'Messages: {prompt}')
     result = []
     try:
       async for token in complete(prompt):
@@ -136,13 +141,13 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
           except:
             pass
     except Exception as e:
-      logging.error(f'ERROR: {repr(e)}')
+      logger.error(f'ERROR: {repr(e)}')
       throttle.call()
       await replyMessage.edit_text(render(f'{''.join(result)}\n**ERROR**: LLM API request failed: {repr(e)}'), parse_mode=constants.ParseMode.HTML)
       return
     throttle.call()
     if len(result) == 0:
-      logging.error('No result returned.')
+      logger.error('No result returned.')
       await replyMessage.edit_text(render('**ERROR**: No result returned.'), parse_mode=constants.ParseMode.HTML)
     else:
       await replyMessage.edit_text('<blockquote expandable>' + render(''.join(result)) + '</blockquote>', parse_mode=constants.ParseMode.HTML)
