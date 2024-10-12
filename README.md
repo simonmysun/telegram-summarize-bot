@@ -4,10 +4,13 @@ This is a fork of [fernvenue/summarize-telegram-bot](https://github.com/fernvenu
 
 The changes includes:
 
-- I removed some features that I don't need
-- I split the code into multiple files
-- I send error messages directly to the telegram user
-- I added some special handling for URLs, e.g. arxiv to html, I use gpt for the whole text (if it fits), and I use more tokens
+- Removed some features that I don't need
+- Splitted the code into multiple files
+- Sending error messages directly to the telegram user
+- Added some special handling for URLs, e.g. arxiv to html, I use gpt for the whole text (if it fits), and I use more tokens
+- Moved access control to seperated group message controller. 
+- Improved throttle handling
+- Improved formatting
 
 ## Features
 
