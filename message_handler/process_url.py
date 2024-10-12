@@ -27,12 +27,14 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
     uri = urlparse(f'http://{url}')
   discussion_uri = None
   if uri.netloc == 'news.ycombinator.com':
+    logging.info('HN URL detected')
     story_id = url.split('=')[-1]
     discussion_uri = uri
     uri = urlparse(get_hn_story_url(story_id))
     logging.info(f'HN post URL: {uri.geturl()}')
     logging.info(f'HN discussion URL: {discussion_uri.geturl()}')
   elif uri.netloc == 'readhacker.news':
+    logging.info('ReadHN URL detected')
     if uri.path.startswith('/s/'):
       story_id = uri.path.split('/')[-1]
       discussion_uri = urlparse(f'https://readhacker.news/c/{story_id}')
@@ -41,6 +43,7 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
       discussion_uri = uri
       uri = urlparse(f'https://readhacker.news/s/{story_id}')
   elif 'reddit.com' in uri.netloc:
+    logging.info('Reddit URL detected')
     post_id = uri.path.split('/')[-2]
     subreddit = uri.path.split('/')[-3]
     discussion_uri = uri
@@ -48,9 +51,12 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
     logging.info(f'Reddit post URL: {uri.geturl()}')
     logging.info(f'Reddit discussion URL: {discussion_uri.geturl()}')
   elif uri.netloc in ['arxiv.org', 'www.arxiv.org']:
-    if uri.path.startswith('/abs/'):
+    logging.info('Arxiv URL detected')
+    if uri.path.startswith('/abs/') or uri.path.startswith('/pdf/'):
       uri_html = urlparse(uri.geturl())
-      uri_html = uri_html._replace(path=uri_html.path.replace('abs', 'html'))
+      uri_html = uri_html._replace(path=uri_html.path.replace('/abs', '/html'))
+      uri_html = uri_html._replace(path=uri_html.path.replace('/pdf', '/html'))
+      logging.info(f'Trying arxiv HTML link: {uri_html.geturl()}')
       if requests.get(uri_html.geturl()).status_code == 404:
         logging.info(f'404: {uri_html.geturl()}')
         uri_html = uri_html._replace(netloc='ar5iv.labs.arxiv.org')
@@ -58,9 +64,11 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
           logging.info(f'404: {uri_html.geturl()}')
           logging.info('Arxiv HTML link not found, using abstract instead.')
         else:
-          uri = uri_html
+          logging.info(f'Fallback to abstract')
+          uri = uri_html._replace(path=uri_html.path.replace('/pdf', '/abs'))
       else:
-        uri = uri_html
+        logging.info(f'Fallback to abstract')
+        uri = uri_html._replace(path=uri_html.path.replace('/pdf', '/abs'))
   elif 'twitter.com' in uri.netloc:
     uri = uri._replace(netloc='fxtwitter.com')
   elif 'x.com' in uri.netloc:
