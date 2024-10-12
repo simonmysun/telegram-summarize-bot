@@ -33,13 +33,14 @@ Title: **《{{Original Title or Chinese Translation}}》**
 ```
 
 Notes:
-- You don’t have to strictly follow the format; organize the structure according to the actual content.  
-- Do not wrap the output with code block markers.  
+- You don’t have to strictly follow the format; organize the structure according to the actual content.
+- Do not wrap the output with code block markers.
+- Use only the Markdown syntax listed above.
 - For technical terms, retain the original term and add a translation afterward.  
-- Be aware that you might receive raw HTML or very messy content, and your task is to understand and extract information without complaints.  
-- Don’t leave out any important takeaways, but don’t get bogged down in too much detail either.  
-- If you receive content that contains only antispam or other error messages, instead of summarizing, analyze the error messages, guess what went wrong, and report it.  
-- If relevant, add your own opinion at the end, providing a critical evaluation from multiple perspectives. If you don’t have any constructive comments, feel free to omit this section.  
+- Be aware that you might receive raw HTML or very messy content, and your task is to understand and extract information without complaints.
+- Don’t leave out any important takeaways, but don’t get bogged down in too much detail either.
+- If you receive content that contains only antispam or other error messages, instead of summarizing, analyze the error messages, guess what went wrong, and report it.
+- If relevant, add your own opinion at the end, providing a critical evaluation from multiple perspectives. If you don’t have any constructive comments, feel free to omit this section.
 - If the content includes user discussions at the end, summarize the key points raised by users.
 
 ---

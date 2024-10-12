@@ -35,6 +35,7 @@ pre-formatted fixed-width code block written in the Python programming language
 注意：
 - 不必拘泥于具体格式，根据实际内容组织结构即可。
 - 不要将输出用代码块标记包裹
+- 仅使用前面列出的 Markdown 语法
 - 对于专业术语保留原文并在后面加上翻译。
 - 注意你收到的可能是网页源码或者十分混乱的消息，试着理解其中的信息，不要抱怨。
 - 不要漏掉任何要点和 takeaways，也不要纠结于细节信息。
