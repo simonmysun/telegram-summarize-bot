@@ -82,11 +82,9 @@ def render(markdown_text: str) -> str:
   markdown_text = re.sub(r'(?m)^(\s*)- ', r'\1&#8226; ', markdown_text)
   markdown_text = re.sub(r'(?m)^(\s*)(\d+)\.\s', r'\1\2\\. ', markdown_text)
   html = markdown.markdown(markdown_text, extensions=['fenced_code', 'nl2br'])
-  logging.info(f'HTML: {html}')
   html = re.sub(r'(?m)<p>', r'\n', html)
   html = re.sub(r'(?m)<\/p>', r'', html)
   html = re.sub(r'(?m)<br />', r'', html)
   html = re.sub(r'(?m)<h\d>(.*?)<\/h\d>', r'<b>\1</b>', html)
-  logging.info(f'subs HTML: {html}')
   clean_html = bleach.clean(html, tags=allowed_tags, attributes=allowed_attributes)
   return clean_html
