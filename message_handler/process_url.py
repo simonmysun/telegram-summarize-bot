@@ -5,15 +5,15 @@ import requests
 import feedparser
 from urllib.parse import urlparse
 
-def get_hn_story_url(story_id: str) -> str:
+def get_hn_story_url(story_id: str):
   base_url = f'https://hacker-news.firebaseio.com/v0/item/{story_id}.json'
   response = requests.get(base_url)
   if response.status_code == 200:
     story_info = response.json()
-    return story_info.get('url')
+    return story_info
   else:
     logger.error(f'Failed to retrieve story with ID {story_id}. Error: {response.status_code}')
-    return ''
+    return None
 
 def get_reddit_post_url_from_rss(subreddit: str, post_id: str) -> str: # never tested
   rss_url = f'https://www.reddit.com/r/{subreddit}/comments/{post_id}.rss'
@@ -33,10 +33,12 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
   if uri.netloc == 'news.ycombinator.com':
     logger.info('HN URL detected')
     story_id = url.split('=')[-1]
-    discussion_uri = uri
-    uri = urlparse(get_hn_story_url(story_id))
-    logger.info(f'HN post URL: {uri.geturl()}')
-    logger.info(f'HN discussion URL: {discussion_uri.geturl()}')
+    story_info = get_hn_story_url(story_id)
+    if story_info.get('type') == 'story':
+      discussion_uri = uri
+      uri = urlparse(story_info.get('url'))
+      logger.info(f'HN post URL: {uri.geturl()}')
+      logger.info(f'HN discussion URL: {discussion_uri.geturl()}')
   elif uri.netloc == 'readhacker.news':
     logger.info('ReadHN URL detected')
     if uri.path.startswith('/s/'):
