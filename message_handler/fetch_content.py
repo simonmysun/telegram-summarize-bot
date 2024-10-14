@@ -16,7 +16,7 @@ async def fetch_content(url: str) -> (str, str):
   try:
     response = requests.get(url, allow_redirects=True, headers={
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-  })
+  }, timeout=60)
     if response.status_code == 200:
       if response.history:
         logger.info(f'Redirected to {response.url}')
