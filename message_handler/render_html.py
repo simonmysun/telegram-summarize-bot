@@ -80,8 +80,9 @@ allowed_attributes = {
 }
 
 def render(markdown_text: str) -> str:
-  markdown_text = re.sub(r'(?m)^(\s*)- ', r'\1&#8226; ', markdown_text)
-  markdown_text = re.sub(r'(?m)^(\s*)(\d+)\.\s', r'\1\2\\. ', markdown_text)
+  markdown_text = re.sub(r'(?m)^(\s*)- ', r'\1&#8226; ', markdown_text) # replace unordered list with bullet point
+  markdown_text = re.sub(r'(?m)^(\s*)(\d+)\.\s', r'\1\2\\. ', markdown_text) # replace ordered list with number point
+  markdown_text = re.sub(r'(?m)^[\-\*]{3,}$', r'&#8212; ', markdown_text) # replace horizontal rule with em dash
   html = markdown.markdown(markdown_text, extensions=['fenced_code', 'nl2br'])
   html = re.sub(r'(?m)<p>', r'\n', html)
   html = re.sub(r'(?m)<\/p>', r'', html)
