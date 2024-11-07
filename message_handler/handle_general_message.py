@@ -55,6 +55,10 @@ prompt_template_summarize_discussion = ''
 with open('prompts/summarize_discussion.txt', 'r') as f_prompt_template_summarize_discussion:
   prompt_template_summarize_discussion = f_prompt_template_summarize_discussion.read()
 
+prompt_template_summarize_comment = ''
+with open('prompts/summarize_comment.txt', 'r') as f_prompt_template_summarize_comment:
+  prompt_template_summarize_comment = f_prompt_template_summarize_comment.read()
+
 async def handle_general_message(update: 'telegram.Update', context: 'telegram.ext.CallbackContext') -> None:
   throttle.call()
   replyMessage = await update.message.reply_text(render('_Processing..._'), parse_mode=constants.ParseMode.HTML)
@@ -65,18 +69,23 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     return
   logger.info(f'Processing: {url}')
   uri, discussion_uri = process_url(url)
+  message = ''
+  message += f'URL: {uri.geturl()}\n'
+  if discussion_uri:
+    message += f'Discussion: {discussion_uri.geturl()}\n\n'
   (final_url, content) = await fetch_content(uri.geturl())
+  message += f'<b><a href="{final_url}">Content</a></b>\n'
   if len([line for line in content.split('\n') if line.strip()]) == 0:
-    logger.error(f'No content or discussion is fetched. Task aborted.')
-    throttle.call()
-    await replyMessage.edit_text(render('**ERROR**: No content or discussion is fetched. Task aborted.'), parse_mode=constants.ParseMode.HTML)
+    logger.error(f'No content or discussion is fetched. ')
+    message += render(f'**ERROR**: No content or discussion is fetched. \n')
     content = f'{final_url}.'
   prompt = prompt_template_summarize_content.format(**{
     'content': content
   })
   if len(prompt) > MAX_INPUT_LENGTH:
-    throttle.call()
-    await update.message.reply_text(render('_content is truncated_'), parse_mode=constants.ParseMode.HTML)
+    message += render(f'_Content is truncated._\n')
+    # throttle.call()
+    # await update.message.reply_text(render(message), parse_mode=constants.ParseMode.HTML)
     logger.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
     prompt = prompt[:MAX_INPUT_LENGTH]
     prompt += 'TRUNCATED'
@@ -85,70 +94,46 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   try:
     async for token in complete(prompt):
       result.append(token)
-      if throttle.busy():
-        pass
-      else:
-        throttle.call()
-        try:
-          await update.message.reply_chat_action(constants.ChatAction.TYPING)
-          await replyMessage.edit_text(render(''.join(result)), parse_mode=constants.ParseMode.HTML)
-        except:
-          pass
   except Exception as e:
     logger.error(f'ERROR: {repr(e)}')
-    throttle.call()
-    await replyMessage.edit_text(render(f'{''.join(result)}\n**ERROR**: LLM API request failed: {repr(e)}'), parse_mode=constants.ParseMode.HTML)
-    return
-  throttle.call()
+    message += f'{''.join(result)}\n{render('**ERROR**: LLM API request failed')}\n'
   if len(result) == 0:
-    logger.error('No result returned.')
-    await replyMessage.edit_text(render('**ERROR**: No result returned.'), parse_mode=constants.ParseMode.HTML)
-  else:
-    await replyMessage.edit_text('<blockquote expandable>' + render(''.join(result)) + '</blockquote>', parse_mode=constants.ParseMode.HTML)
+    logger.error('No result returned from LLM.')
+    message += render(f'**ERROR**: No result returned from LLM.\n')
   
+  else:
+    message += f'<blockquote expandable>{render(''.join(result))}</blockquote>'
+  await replyMessage.edit_text(message, parse_mode=constants.ParseMode.HTML)
+  throttle.call()
   discussion = ''
   if discussion_uri:
-    throttle.call()
-    replyMessage = await update.message.reply_text(render('_Processing discussion..._'), parse_mode=constants.ParseMode.HTML)
+    message += f'<b><a href="{discussion_uri.geturl()}">Discussion</a></b>\n'
     (final_url, discussion) = await fetch_content(discussion_uri.geturl())
     if len([line for line in discussion.split('\n') if line.strip()]) == 0:
       logger.error(f'No discussion is fetched. Task aborted.')
-      throttle.call()
-      await replyMessage.edit_text(render('**ERROR**: No discussion is fetched. Task aborted.'), parse_mode=constants.ParseMode.HTML)
-      return
+      message += f'{render('**ERROR**: No discussion is fetched. Task aborted.')}\n'
     prompt = prompt_template_summarize_discussion.format(**{
       'content': ''.join(result),
       'discussion': discussion
     })
     if len(prompt) > MAX_INPUT_LENGTH:
       logger.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
-      throttle.call()
-      await update.message.reply_text(render('_discussion is truncated_'), parse_mode=constants.ParseMode.HTML)
+      message += f'{render('_discussion is truncated_')}\n'
       prompt = prompt[:MAX_INPUT_LENGTH]
-      prompt += 'TRUNCATED'
+      prompt += '\nTRUNCATED\n'
     # logger.info(f'Messages: {prompt}')
     result = []
     try:
       async for token in complete(prompt):
         result.append(token)
-        if throttle.busy():
-          pass
-        else:
-          throttle.call()
-          try:
-            await update.message.reply_chat_action(constants.ChatAction.TYPING)
-            await replyMessage.edit_text(render(''.join(result)), parse_mode=constants.ParseMode.HTML)
-          except:
-            pass
     except Exception as e:
       logger.error(f'ERROR: {repr(e)}')
-      throttle.call()
-      await replyMessage.edit_text(render(f'{''.join(result)}\n**ERROR**: LLM API request failed: {repr(e)}'), parse_mode=constants.ParseMode.HTML)
-      return
-    throttle.call()
+      message += f'{''.join(result)}\n{render('**ERROR**: LLM API request failed')}\n'
     if len(result) == 0:
       logger.error('No result returned.')
-      await replyMessage.edit_text(render('**ERROR**: No result returned.'), parse_mode=constants.ParseMode.HTML)
+      message += f'**ERROR**: No result returned.\n'
     else:
-      await replyMessage.edit_text('<blockquote expandable>' + render(''.join(result)) + '</blockquote>', parse_mode=constants.ParseMode.HTML)
+      message += f'<blockquote expandable>{render(''.join(result))}</blockquote>'
+    throttle.call()
+    await replyMessage.edit_text(message, parse_mode=constants.ParseMode.HTML)
     
