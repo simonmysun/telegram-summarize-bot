@@ -48,11 +48,11 @@ def get_url_from_message(messages: 'telegram.Message[]') -> str:
 throttle = Throttle()
 
 prompt_template_summarize_content = ''
-with open('prompt_template_summarize_content.txt', 'r') as f_prompt_template_summarize_content:
+with open('prompts/summarize_content.txt', 'r') as f_prompt_template_summarize_content:
   prompt_template_summarize_content = f_prompt_template_summarize_content.read()
 
 prompt_template_summarize_discussion = ''
-with open('prompt_template_summarize_discussion.txt', 'r') as f_prompt_template_summarize_discussion:
+with open('prompts/summarize_discussion.txt', 'r') as f_prompt_template_summarize_discussion:
   prompt_template_summarize_discussion = f_prompt_template_summarize_discussion.read()
 
 async def handle_general_message(update: 'telegram.Update', context: 'telegram.ext.CallbackContext') -> None:
