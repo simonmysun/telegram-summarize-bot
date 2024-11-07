@@ -79,9 +79,16 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     logger.error(f'No content or discussion is fetched. ')
     message += render(f'**ERROR**: No content or discussion is fetched. \n')
     content = f'{final_url}.'
-  prompt = prompt_template_summarize_content.format(**{
-    'content': content
-  })
+  
+  if uri.netloc in ['news.ycombinator.com'] and not discussion_uri:
+    logger.info('This is a comment on HN')
+    prompt = prompt_template_summarize_comment.format(**{
+      'content': content
+    })
+  else:
+    prompt = prompt_template_summarize_content.format(**{
+      'content': content
+    })
   if len(prompt) > MAX_INPUT_LENGTH:
     message += render(f'_Content is truncated._\n')
     # throttle.call()
