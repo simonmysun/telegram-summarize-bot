@@ -29,25 +29,28 @@ async def complete(prompt: str) -> None:
     'stream': True
   }, stream=True) as response:
     for line in response.iter_lines():
-      if line:
+      if line: 
         parts = line.decode('utf-8').split('data: ')
         if parts[1] == '[DONE]':
           continue
         data = json.loads(parts[1])
         if 'choices' not in data:
           logger.error(f'Unexpected response: {data}')
-          raise
+          raise Exception(f'Unexpected response: {data}')
         if len(data['choices']) != 1:
           logger.error(f'Unexpected number of choices: {len(data["choices"])}, {data}')
-        else:
-          try:
+          raise Exception(f'Unexpected number of choices: {len(data["choices"])}, {data}')
+        try:
+          if 'finish_reason' in data['choices'][0]:
             if data['choices'][0]['finish_reason'] != 'stop':
-              if data['choices'][0]['finish_reason'] == None:
-                if 'content' in data['choices'][0]['delta']:
-                  yield data['choices'][0]['delta']['content']
-              else:
+              if data['choices'][0]['finish_reason'] != None:
+                logger.error(f'Unexpected finish_reason: {data["choices"][0]["finish_reason"]}')
                 raise Exception(f'finish_reason={ data["choices"][0]["finish_reason"] }')
-          except Exception as e:
-            logger.error(line)
-            logger.error(f'Error: {e}')
-            raise
+          if 'delta' not in data['choices'][0] or 'content' not in data['choices'][0]['delta']:
+            logger.error(f'Unexpected response: {data}')
+            raise Exception(f'Unexpected response: {data}')
+          yield data['choices'][0]['delta']['content']
+        except Exception as e:
+          logger.error(line)
+          logger.error(f'Error: {e}')
+          raise
