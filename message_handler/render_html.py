@@ -80,13 +80,18 @@ allowed_attributes = {
 }
 
 def render(markdown_text: str) -> str:
-  markdown_text = re.sub(r'(?m)^(\s*)- ', r'\1&#8226; ', markdown_text) # replace unordered list with bullet point
+  # logger.info(f'Preprocessing markdown text: {markdown_text[:100]}')
+  markdown_text = re.sub(r'(?m)^(\s*)[-\*\+] ', r'\1&#8226; ', markdown_text) # replace unordered list with bullet point
   markdown_text = re.sub(r'(?m)^(\s*)(\d+)\.\s', r'\1\2\\. ', markdown_text) # replace ordered list with number point
   markdown_text = re.sub(r'(?m)^[\-\*]{3,}$', r'&#8212;&#8212;&#8212; ', markdown_text) # replace horizontal rule with em dash
+  # logger.info(f'Rendering markdown text: {markdown_text[:100]}')
   html = markdown.markdown(markdown_text, extensions=['fenced_code', 'nl2br'])
+  # logger.info(f'Postprocessing html: {html[:100]}')
   html = re.sub(r'(?m)<p>', r'\n', html)
   html = re.sub(r'(?m)<\/p>', r'', html)
   html = re.sub(r'(?m)<br />', r'', html)
   html = re.sub(r'(?m)<h\d>(.*?)<\/h\d>', r'<b>\1</b>', html)
+  # logger.info(f'Cleaning html: {html[:100]}')
   clean_html = bleach.clean(html, tags=allowed_tags, attributes=allowed_attributes)
+  # logger.info(f'Cleaned html: {clean_html[:100]}')
   return clean_html
