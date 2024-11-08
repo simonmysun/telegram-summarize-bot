@@ -70,16 +70,15 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   logger.info(f'Processing: {url}')
   uri, discussion_uri = process_url(url)
   message = ''
-  message += f'URL: {uri.geturl()}\n'
+  (final_url, content) = await fetch_content(uri.geturl())
+  message += f'URL: {final_url}\n'
   if discussion_uri:
     message += f'Discussion: {discussion_uri.geturl()}\n\n'
-  (final_url, content) = await fetch_content(uri.geturl())
   message += f'<b><a href="{final_url}">Content</a></b>\n'
   if len([line for line in content.split('\n') if line.strip()]) == 0:
     logger.error(f'No content or discussion is fetched. ')
     message += render(f'**ERROR**: No content or discussion is fetched. \n')
     content = f'{final_url}.'
-  
   if uri.netloc in ['news.ycombinator.com'] and not discussion_uri:
     logger.info('This is a comment on HN')
     prompt = prompt_template_summarize_comment.format(**{
