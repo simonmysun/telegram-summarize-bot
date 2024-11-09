@@ -29,6 +29,7 @@ async def complete(prompt: str) -> None:
     'stream': True
   }, stream=True) as response:
     for line in response.iter_lines():
+      # logger.info(line)
       if line: 
         parts = line.decode('utf-8').split('data: ')
         if parts[1] == '[DONE]':
@@ -46,6 +47,8 @@ async def complete(prompt: str) -> None:
               if data['choices'][0]['finish_reason'] != None:
                 logger.error(f'Unexpected finish_reason: {data["choices"][0]["finish_reason"]}')
                 raise Exception(f'finish_reason={ data["choices"][0]["finish_reason"] }')
+            else:
+              break
           if 'delta' not in data['choices'][0] or 'content' not in data['choices'][0]['delta']:
             logger.error(f'Unexpected response: {data}')
             raise Exception(f'Unexpected response: {data}')
