@@ -7,8 +7,7 @@ from html2text import HTML2Text
 h2t = HTML2Text()
 h2t.ignore_tables = True
 h2t.ignore_links = True
-h2t.ignore_images = True
-h2t.google_doc = True
+h2t.images_to_alt = True
 
 async def fetch_content(url: str) -> (str, str):
   logger.info(f'Fetching content from {url}')
@@ -21,18 +20,21 @@ async def fetch_content(url: str) -> (str, str):
       if response.history:
         logger.info(f'Redirected to {response.url}')
         url = response.url
-      logger.info(f'Fetched {len(response.text)}')
       content = response.text
+      logger.info(f'Fetched {len(content)}')
     else:
       logger.info(f'Failed to retrieve content from {url}. Error: {response.status_code}')
     try:
+      logger.info(f'Converting HTML to text...')
       content_text = h2t.handle(content)
+      logger.info(f'Converted {len(content)} to {len(content_text)}')
       if len([line for line in content_text.split('\n') if line.strip()]) > 0:
         content = content_text
       else:
-        raise Exception('Converted text has no content.')
-    except:
-      logger.debug(f'Failed to convert HTML to text.')
+        logger.error(f'Converted text has no content. {content_text}')
+        raise Exception('Converted text has no content. ')
+    except Exception as e:
+      logger.debug(f'Failed to convert HTML to text., {repr(e)}')
       pass
   except Exception as e:
     logger.info(f'Error: {repr(e)}')
