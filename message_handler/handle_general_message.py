@@ -95,8 +95,8 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     logger.info(f'Prompt length is ({len(prompt)} characters). Truncating to {MAX_INPUT_LENGTH} characters.')
     prompt = prompt[:MAX_INPUT_LENGTH]
     prompt += 'TRUNCATED'
-  # logger.info(f'Messages: {prompt}')
   result = []
+  # logger.info(f'prompt: {prompt}')
   try:
     async for token in complete(prompt):
       result.append(token)
@@ -106,9 +106,11 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   if len(result) == 0:
     logger.error('No result returned from LLM.')
     message += render(f'**ERROR**: No result returned from LLM.\n')
-  
   else:
     message += f'<blockquote expandable>{render(''.join(result))}</blockquote>'
+  logger.info(f'Message: {message[:50].encode("unicode_escape").decode("utf-8")}')
+  logger.info(f'Message: {message}')
+  logger.info(f'length: {len(message)}')
   await replyMessage.edit_text(message, parse_mode=constants.ParseMode.HTML)
   throttle.call()
   discussion = ''
@@ -129,6 +131,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
       prompt += '\nTRUNCATED\n'
     # logger.info(f'Messages: {prompt}')
     result = []
+    # logger.info(f'prompt: {prompt}')
     try:
       async for token in complete(prompt):
         result.append(token)
@@ -141,5 +144,8 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     else:
       message += f'<blockquote expandable>{render(''.join(result))}</blockquote>'
     throttle.call()
+    logger.info(f'Message: {message[:50].encode("unicode_escape").decode("utf-8")}')
+    # logger.info(f'Message: {message}')
+    logger.info(f'length: {len(message)}')
     await replyMessage.edit_text(message, parse_mode=constants.ParseMode.HTML)
     
