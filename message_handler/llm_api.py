@@ -34,7 +34,13 @@ async def complete(prompt: str) -> None:
         parts = line.decode('utf-8').split('data: ')
         if parts[1] == '[DONE]':
           continue
-        data = json.loads(parts[1])
+        data = None
+        try:
+          data = json.loads(parts[1])
+        except Exception as e:
+          logger.error(f'Error: {e}')
+          logger.error(line)
+          raise e
         if 'choices' not in data:
           logger.error(f'Unexpected response: {data}')
           raise Exception(f'Unexpected response: {data}')
