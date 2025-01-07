@@ -3,6 +3,7 @@ logger = logging.getLogger(__name__)
 
 import requests
 import feedparser
+import re
 from urllib.parse import urlparse
 
 def get_hn_story_url(story_id: str):
@@ -48,7 +49,7 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
       story_id = uri.path.split('/')[-1]
       discussion_uri = uri
       uri = urlparse(f'https://readhacker.news/s/{story_id}')
-  elif 'reddit.com' in uri.netloc:
+  elif re.match(r'(.*\.)?reddit\.com$', uri.netloc):
     logger.info('Reddit URL detected')
     post_id = uri.path.split('/')[-2]
     subreddit = uri.path.split('/')[-3]
@@ -56,7 +57,7 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
     uri = urlparse(get_reddit_post_url_from_rss(subreddit, post_id))
     logger.info(f'Reddit post URL: {uri.geturl()}')
     logger.info(f'Reddit discussion URL: {discussion_uri.geturl()}')
-  elif uri.netloc in ['arxiv.org', 'www.arxiv.org']:
+  elif re.match(r'(.*\.)?arxiv\.org$', uri.netloc):
     logger.info('Arxiv URL detected')
     if uri.path.startswith('/abs/') or uri.path.startswith('/pdf/'):
       uri_html = urlparse(uri.geturl())
@@ -75,9 +76,9 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
       else:
         logger.info(f'Fallback to abstract')
         uri = uri_html._replace(path=uri_html.path.replace('/pdf', '/abs'))
-  elif 'twitter.com' in uri.netloc:
+  elif re.match(r'(.*\.)?twitter\.com$', uri.netloc):
     uri = uri._replace(netloc='fxtwitter.com')
-  elif 'x.com' in uri.netloc:
+  elif re.match(r'(.*\.)?x\.com$', uri.netloc):
     uri= uri._replace(netloc='fixupx.com')
   logger.info(f'Final URL: {uri.geturl()}')
   if discussion_uri:
