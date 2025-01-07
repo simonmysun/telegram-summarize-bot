@@ -21,4 +21,4 @@ async def handle_permission_check(update: 'telegram.Update', context: 'telegram.
     await update.message.reply_text('Permission denied')
     raise ApplicationHandlerStop()
   else:
-    logger.info(f'user<{user_id}>: Permission granted')
+    logger.info(f'user<{user_id}>@chat<{chat_id}>: Permission granted')
