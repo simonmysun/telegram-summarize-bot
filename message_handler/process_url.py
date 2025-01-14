@@ -16,16 +16,6 @@ def get_hn_story_url(story_id: str):
     logger.error(f'Failed to retrieve story with ID {story_id}. Error: {response.status_code}')
     return None
 
-def get_reddit_post_url_from_rss(subreddit: str, post_id: str) -> str: # never tested
-  rss_url = f'https://www.reddit.com/r/{subreddit}/comments/{post_id}.rss'
-  feed = feedparser.parse(rss_url)
-  if feed.entries:
-    post = feed.entries[0]  # Assuming there's only one entry for the given post ID
-    return post.link
-  else:
-    logger.error(f'No post found with ID {post_id} in subreddit {subreddit}.')
-    return ''
-
 def process_url(url: str) -> tuple[urlparse, urlparse]:
   uri = urlparse(url)
   if not uri.scheme:
@@ -49,14 +39,6 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
       story_id = uri.path.split('/')[-1]
       discussion_uri = uri
       uri = urlparse(f'https://readhacker.news/s/{story_id}')
-  elif re.match(r'(.*\.)?reddit\.com$', uri.netloc):
-    logger.info('Reddit URL detected')
-    post_id = uri.path.split('/')[-2]
-    subreddit = uri.path.split('/')[-3]
-    discussion_uri = uri
-    uri = urlparse(get_reddit_post_url_from_rss(subreddit, post_id))
-    logger.info(f'Reddit post URL: {uri.geturl()}')
-    logger.info(f'Reddit discussion URL: {discussion_uri.geturl()}')
   elif re.match(r'(.*\.)?arxiv\.org$', uri.netloc):
     logger.info('Arxiv URL detected')
     if uri.path.startswith('/abs/') or uri.path.startswith('/pdf/'):
