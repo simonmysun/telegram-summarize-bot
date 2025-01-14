@@ -10,14 +10,14 @@ h2t.ignore_links = True
 h2t.images_to_alt = True
 
 import os
-BROWSERLESS_API = os.getenv('BROWSERLESS_API')
-BROWSERLESS_TOKEN = os.getenv('BROWSERLESS_TOKEN')
+BROWSERLESS_API_URL = os.getenv('BROWSERLESS_API_URL')
+BROWSERLESS_API_TOKEN = os.getenv('BROWSERLESS_API_TOKEN')
 
 import urllib
 browserless_query_params = urllib.parse.urlencode({
   "blockAds": "true",
   "timeout": "55000",
-  "token": BROWSERLESS_TOKEN,
+  "token": BROWSERLESS_API_TOKEN,
   "headless": False,
   "stealth": True
 })
@@ -27,9 +27,9 @@ async def fetch_content(url: str) -> (str, str):
   content = ''
   try:
     response = None
-    if BROWSERLESS_API is not None and len(BROWSERLESS_API) > 0:
+    if BROWSERLESS_API_URL is not None and len(BROWSERLESS_API_URL) > 0:
       logger.info(f'Using browserless API')
-      browserless_url = f'{BROWSERLESS_API}/content?{browserless_query_params}'
+      browserless_url = f'{BROWSERLESS_API_URL}/content?{browserless_query_params}'
       response = requests.post(browserless_url, json={
         "bestAttempt": True,
         "gotoOptions": {
