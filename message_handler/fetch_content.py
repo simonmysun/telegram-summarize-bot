@@ -9,13 +9,46 @@ h2t.ignore_tables = True
 h2t.ignore_links = True
 h2t.images_to_alt = True
 
+import os
+BROWSERLESS_API = os.getenv('BROWSERLESS_API')
+BROWSERLESS_TOKEN = os.getenv('BROWSERLESS_TOKEN')
+
+import urllib
+browserless_query_params = urllib.parse.urlencode({
+  "blockAds": "true",
+  "timeout": "55000",
+  "token": BROWSERLESS_TOKEN,
+  "headless": False,
+  "stealth": True
+})
+
 async def fetch_content(url: str) -> (str, str):
   logger.info(f'Fetching content from {url}')
   content = ''
   try:
-    response = requests.get(url, allow_redirects=True, headers={
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-  }, timeout=60)
+    response = None
+    if BROWSERLESS_API is not None and len(BROWSERLESS_API) > 0:
+      logger.info(f'Using browserless API')
+      browserless_url = f'{BROWSERLESS_API}/content?{browserless_query_params}'
+      response = requests.post(browserless_url, json={
+        "bestAttempt": True,
+        "gotoOptions": {
+          "timeout": 0
+        },
+        "setJavaScriptEnabled": True,
+        "url": url,
+        "waitForTimeout": 3000
+      }, timeout=60)
+      probe_redirection = requests.get(url, allow_redirects=True, headers={
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+      }, timeout=3)
+      if probe_redirection.history:
+        logger.info(f'Redirected to {probe_redirection.url}')
+        url = probe_redirection.url
+    else:
+      response = requests.get(url, allow_redirects=True, headers={
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+      }, timeout=60)
     if response.status_code == 200:
       if response.history:
         logger.info(f'Redirected to {response.url}')
