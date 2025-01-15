@@ -20,5 +20,5 @@ async def handle_help_message(update: 'telegram.Update', context: 'telegram.ext.
   ])
   logger.info(await context.bot.get_my_commands())
   await update.message.reply_text('I summarize the first link in the message')
-  if userId in ADMIN_USER_IDS:
+  if user_id in ADMIN_USER_IDS:
     await update.message.reply_text('Admin commands are available.')
