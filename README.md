@@ -2,7 +2,7 @@
 
 This is a fork of [fernvenue/summarize-telegram-bot](https://github.com/fernvenue/summarize-telegram-bot/tree/ca022f113dd761bb269d63c1559d20cf38d89b69) that summarize link from telegram message using large language models. 
 
-The changes includes:
+The changes includes until 16.07.2024:
 
 - Removed some features that I don't need
 - Splitted the code into multiple files
@@ -81,11 +81,11 @@ pip install -r requirements.txt
 
 Create a `.env` file in the root directory of the project and add your credentials. You can use the `.env.example` file as a template.
 
-## Running the Bot
+### Browserless Configuration
 
-```bash
-python bot.py
-```
+If you are using browserless to scrape the web pages, you need to set the `BROWSERLESS_API_KEY` and `BROWSERLESS_API_URL` in the `.env` file.
+
+The `BROWSERLESS_API_URL` should be the REST API base URL of the browserless instance, e.g. `https://localhost:3000`, without the trailing slash.
 
 ## Usage
 
