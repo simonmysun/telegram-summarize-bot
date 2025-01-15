@@ -19,7 +19,8 @@ from message_handler.handle_help_message import handle_help_message
 
 if __name__ == '__main__':
   application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-  application.add_handler(CommandHandler('start', handle_help_message))
+  application.add_handler(CommandHandler('start', handle_general_message), group=100)
+  application.add_handler(CommandHandler('start', handle_permission_check), group=1)
   application.add_handler(CommandHandler('help', handle_help_message))
   application.add_handler(CommandHandler('summarize', handle_general_message), group=100)
   application.add_handler(CommandHandler('summarize', handle_permission_check), group=1)
