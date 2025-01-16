@@ -17,6 +17,7 @@ The changes includes until 16.07.2024:
 - Summarizes first link from any telegram message received
 - Simple access control
 - Replaces some URLs e.g. X.com, arxiv.org, etc. with better machine-readable URLs
+- Browserless support
 - Deployment with docker or docker compose
 
 ## TODO
@@ -83,7 +84,7 @@ Create a `.env` file in the root directory of the project and add your credentia
 
 ### Browserless Configuration
 
-If you are using browserless to scrape the web pages, you need to set the `BROWSERLESS_API_KEY` and `BROWSERLESS_API_URL` in the `.env` file.
+If you are using browserless to scrape the web pages, you need to set the `BROWSERLESS_API_TOKEN` and `BROWSERLESS_API_URL` in the `.env` file.
 
 The `BROWSERLESS_API_URL` should be the REST API base URL of the browserless instance, e.g. `https://localhost:3000`, without the trailing slash.
 
