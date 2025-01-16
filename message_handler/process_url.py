@@ -2,7 +2,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 import requests
-import feedparser
 import re
 from urllib.parse import urlparse
 
@@ -58,10 +57,6 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
       else:
         logger.info(f'Fallback to abstract')
         uri = uri_html._replace(path=uri_html.path.replace('/pdf', '/abs'))
-  elif re.match(r'(.*\.)?twitter\.com$', uri.netloc):
-    uri = uri._replace(netloc='fxtwitter.com')
-  elif re.match(r'(.*\.)?x\.com$', uri.netloc):
-    uri= uri._replace(netloc='fixupx.com')
   logger.info(f'Final URL: {uri.geturl()}')
   if discussion_uri:
     logger.info(f'Final Discussion URL: {discussion_uri.geturl()}')
