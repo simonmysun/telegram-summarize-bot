@@ -25,6 +25,7 @@ def get_url_from_message(messages: 'telegram.Message[]') -> str:
   for message in messages:
     if message is None:
       continue
+    all_text += f'{message.text}\n'
     if message.entities:
       for entity in message.entities:
         if entity.type == 'text_link':
@@ -37,7 +38,6 @@ def get_url_from_message(messages: 'telegram.Message[]') -> str:
           logger.info(f'URL found in caption entity: {entity.url}')
     if message.caption:
       all_text += f'{message.caption}\n'
-    all_text += f'{message.text}\n'
   logger.info(f'All text: {all_text}')
   urls = re.findall(r'(([Hh][Tt]{2}[Pp][Ss]?:\/\/)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.([a-zA-Z()]{2,}|[xX][nN]--[a-zA-Z()]{2,})\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*))', all_text) # this is still not a complete URL matching regex
   if urls:
@@ -72,9 +72,9 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   uri, discussion_uri = process_url(url)
   message = ''
   (final_url, content) = await fetch_content(uri.geturl())
-  message += f'URL: {final_url}\n'
   if discussion_uri:
-    message += f'Discussion: {discussion_uri.geturl()}\n\n'
+    message += f'Discussion: {discussion_uri.geturl()}\n'
+  message += f'URL: {final_url}\n'
   message += f'<b><a href="{final_url}">Content</a></b>\n'
   if len([line for line in content.split('\n') if line.strip()]) == 0:
     logger.error(f'No content or discussion is fetched. ')
