@@ -9,6 +9,7 @@ import re
 import os
 
 from telegram import constants
+from telegram import LinkPreviewOptions
 
 from .process_url import process_url
 from .fetch_content import fetch_content
@@ -116,7 +117,7 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   discussion = ''
   if discussion_uri:
     message += f'<b><a href="{discussion_uri.geturl()}">Discussion</a></b>\n'
-    (final_url, discussion) = await fetch_content(discussion_uri.geturl())
+    (_, discussion) = await fetch_content(discussion_uri.geturl())
     if len([line for line in discussion.split('\n') if line.strip()]) == 0:
       logger.error(f'No discussion is fetched. Task aborted.')
       message += f'{render('**ERROR**: No discussion is fetched. Task aborted.')}\n'
@@ -144,8 +145,8 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     else:
       message += f'<blockquote expandable>{render(''.join(result))}</blockquote>'
     throttle.call()
-    logger.info(f'Message: {message[:50].encode("unicode_escape").decode("utf-8")}')
+    logger.info(f'Message: {message[:80].encode("unicode_escape").decode("utf-8")}')
     # logger.info(f'Message: {message}')
     logger.info(f'length: {len(message)}')
-    await replyMessage.edit_text(message, parse_mode=constants.ParseMode.HTML)
+    await replyMessage.edit_text(message, parse_mode=constants.ParseMode.HTML, link_preview_options=LinkPreviewOptions(is_disabled=False, url=final_url, prefer_small_media=True))
     
