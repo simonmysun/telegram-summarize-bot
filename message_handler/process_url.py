@@ -24,7 +24,8 @@ def process_url(url: str) -> tuple[urlparse, urlparse]:
     logger.info('HN URL detected')
     story_id = url.split('=')[-1]
     story_info = get_hn_story_url(story_id)
-    if story_info.get('type') == 'story':
+    story_type = story_info.get('type')
+    if story_type == 'story':
       discussion_uri = uri
       uri = urlparse(story_info.get('url'))
       logger.info(f'HN post URL: {uri.geturl()}')
