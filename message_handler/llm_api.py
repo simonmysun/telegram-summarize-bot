@@ -46,7 +46,8 @@ async def complete(prompt: str) -> None:
           raise Exception(f'Unexpected response: {data}')
         if len(data['choices']) != 1:
           logger.error(f'Unexpected number of choices: {len(data["choices"])}, {data}')
-          raise Exception(f'Unexpected number of choices: {len(data["choices"])}, {data}')
+          if len(data['choices']) == 0:
+            raise Exception(f'Unexpected number of choices: {len(data["choices"])}, {data}')
         try:
           if 'finish_reason' in data['choices'][0]:
             if data['choices'][0]['finish_reason'] != 'stop':
