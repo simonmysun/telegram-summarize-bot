@@ -12,6 +12,7 @@ h2t.images_to_alt = True
 import os
 BROWSERLESS_API_URL = os.getenv('BROWSERLESS_API_URL')
 BROWSERLESS_API_TOKEN = os.getenv('BROWSERLESS_API_TOKEN')
+USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
 
 import urllib
 browserless_query_params = urllib.parse.urlencode({
@@ -22,33 +23,59 @@ browserless_query_params = urllib.parse.urlencode({
   "stealth": True
 })
 
-async def fetch_content(url: str) -> (str, str):
+def fetch_directly(url: str):
+  logger.info('Falling back to direct HTTP request')
+  return requests.get(url, allow_redirects=True, headers={
+    'User-Agent': USER_AGENT
+  }, timeout=60)
+
+def is_browser_error_page(content: str) -> bool:
+  return any(marker in content for marker in (
+    'DNS_PROBE_FINISHED_',
+    'ERR_NAME_NOT_RESOLVED',
+    'DNS address could not be found'
+  ))
+
+async def fetch_content(url: str) -> tuple[str, str, bool]:
   logger.info(f'Fetching content from {url}')
   content = ''
+  fallback_used = False
   try:
     response = None
     if BROWSERLESS_API_URL is not None and len(BROWSERLESS_API_URL) > 0:
       logger.info(f'Using browserless API')
       browserless_url = f'{BROWSERLESS_API_URL}/content?{browserless_query_params}'
-      response = requests.post(browserless_url, json={
-        "bestAttempt": True,
-        "gotoOptions": {
-          "timeout": 0
-        },
-        "setJavaScriptEnabled": True,
-        "url": url,
-        "waitForTimeout": 3000
-      }, timeout=60)
-      probe_redirection = requests.get(url, allow_redirects=True, headers={
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-      }, timeout=3)
-      if probe_redirection.history:
-        logger.info(f'Redirected to {probe_redirection.url}')
-        url = probe_redirection.url
+      try:
+        response = requests.post(browserless_url, json={
+          "bestAttempt": True,
+          "gotoOptions": {
+            "timeout": 0
+          },
+          "setJavaScriptEnabled": True,
+          "url": url,
+          "waitForTimeout": 3000
+        }, timeout=60)
+      except requests.RequestException as e:
+        logger.info(f'Browserless request failed: {repr(e)}')
+        fallback_used = True
+        response = fetch_directly(url)
+      else:
+        if response.status_code != 200 or is_browser_error_page(response.text):
+          logger.info(f'Browserless failed with status {response.status_code}')
+          fallback_used = True
+          response = fetch_directly(url)
+        else:
+          try:
+            probe_redirection = requests.get(url, allow_redirects=True, headers={
+              'User-Agent': USER_AGENT
+            }, timeout=3)
+            if probe_redirection.history:
+              logger.info(f'Redirected to {probe_redirection.url}')
+              url = probe_redirection.url
+          except requests.RequestException as e:
+            logger.info(f'Failed to probe redirection: {repr(e)}')
     else:
-      response = requests.get(url, allow_redirects=True, headers={
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-      }, timeout=60)
+      response = fetch_directly(url)
     if response.status_code == 200:
       if response.history:
         logger.info(f'Redirected to {response.url}')
@@ -73,4 +100,4 @@ async def fetch_content(url: str) -> (str, str):
     logger.info(f'Error: {repr(e)}')
     pass
   logger.info(f'Content length: {len(content)}')
-  return (url, content)
+  return (url, content, fallback_used)

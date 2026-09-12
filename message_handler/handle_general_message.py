@@ -71,11 +71,13 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   logger.info(f'Processing: {url}')
   uri, discussion_uri = process_url(url)
   message = ''
-  (final_url, content) = await fetch_content(uri.geturl())
+  (final_url, content, content_fallback_used) = await fetch_content(uri.geturl())
   if discussion_uri:
     message += f'Discussion: {discussion_uri.geturl()}\n'
   message += f'URL: {final_url}\n'
   message += f'<b><a href="{final_url}">Content</a></b>\n'
+  if content_fallback_used:
+    message += render('_Browserless failed; content was fetched via direct HTTP fallback._\n')
   if len([line for line in content.split('\n') if line.strip()]) == 0:
     logger.error(f'No content or discussion is fetched. ')
     message += render(f'**ERROR**: No content or discussion is fetched. \n')
@@ -117,7 +119,9 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
   discussion = ''
   if discussion_uri:
     message += f'<b><a href="{discussion_uri.geturl()}">Discussion</a></b>\n'
-    (_, discussion) = await fetch_content(discussion_uri.geturl())
+    (_, discussion, discussion_fallback_used) = await fetch_content(discussion_uri.geturl())
+    if discussion_fallback_used:
+      message += render('_Browserless failed; discussion was fetched via direct HTTP fallback._\n')
     if len([line for line in discussion.split('\n') if line.strip()]) == 0:
       logger.error(f'No discussion is fetched. Task aborted.')
       message += f'{render('**ERROR**: No discussion is fetched. Task aborted.')}\n'
@@ -149,4 +153,3 @@ async def handle_general_message(update: 'telegram.Update', context: 'telegram.e
     # logger.info(f'Message: {message}')
     logger.info(f'length: {len(message)}')
     await replyMessage.edit_text(message, parse_mode=constants.ParseMode.HTML, link_preview_options=LinkPreviewOptions(is_disabled=False, url=final_url, prefer_small_media=True))
-    
