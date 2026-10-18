@@ -23,9 +23,15 @@ async def complete(prompt: str) -> None:
     stream=True
   )
   for chunk in completion:
-    if hasattr(chunk, 'choices') and len(chunk.choices) > 0:
-      if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-        if chunk.choices[0].delta.content:
-          yield chunk.choices[0].delta.content
-          continue
+    if not chunk.choices:
+      continue
+    choice = chunk.choices[0]
+    content = getattr(choice.delta, 'content', None)
+    if content:
+      yield content
+      continue
+    if getattr(choice.delta, 'reasoning_content', None):
+      continue
+    if choice.finish_reason:
+      continue
     logger.error(f"Unexpected response format: {chunk}")
